@@ -52,19 +52,19 @@ app.get("/api/disciplines/:id", (req, res) => {
 // ROUTE 5 : liste complète des établissements
 app.get("/api/etablissements", (req, res) => {
   const list = Object.values(db.etablissements);
-  res.json(list);
+  res.json(etablissements);
 });
 
 // ROUTE 6 : liste complète des disciplines
 app.get("/api/disciplines", (req, res) => {
   const list = Object.values(db.discipline);
-  res.json(list);
+  res.json(discipline);
 });
 
 // ROUTE 7 : liste complète des mentions
 app.get("/api/mentions", (req, res) => {
   const list = Object.values(db.mentions);
-  res.json(list);
+  res.json(mentions);
 });
 
 
