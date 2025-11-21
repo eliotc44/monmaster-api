@@ -49,21 +49,23 @@ app.get("/api/disciplines/:id", (req, res) => {
   res.json(d);
 });
 
-// ROUTE 5 : liste complète des établissements (OBJET)
+// ROUTE 5 : liste complète des établissements
 app.get("/api/etablissements", (req, res) => {
-  res.json(db.etablissements);
+  const list = Object.values(db.etablissements);
+  res.json(list);
 });
 
-// ROUTE 6 : liste complète des disciplines (OBJET)
+// ROUTE 6 : liste complète des disciplines
 app.get("/api/disciplines", (req, res) => {
-  res.json(db.discipline);
+  const list = Object.values(db.discipline);
+  res.json(list);
 });
 
-// ROUTE 7 : liste complète des mentions (OBJET)
+// ROUTE 7 : liste complète des mentions
 app.get("/api/mentions", (req, res) => {
-  res.json(db.mentions);
+  const list = Object.values(db.mentions);
+  res.json(list);
 });
-
 
 
 app.get("/api/formations", (req, res) => {
@@ -87,6 +89,51 @@ app.get("/api/formations", (req, res) => {
 
   res.json(results);
 });
+
+// ROUTE 8 : formations par mention (inm)
+app.get("/api/formations/mention/:inm", (req, res) => {
+  const { inm } = req.params;
+  const { max } = req.query;
+
+  // récupérer toutes les formations ayant la même mention
+  let results = Object.values(db.formations).filter(
+    f => f.mention_id == inm
+  );
+
+  if (results.length === 0) {
+    return res.status(404).json({ error: "Aucune formation trouvée pour cette mention." });
+  }
+
+  // limiter le nombre de résultats si max est fourni
+  if (max && !isNaN(max)) {
+    results = results.slice(0, Number(max));
+  }
+
+  res.json(results);
+});
+
+// ROUTE 9 : formations par établissement (uai)
+app.get("/api/formations/etablissement/:uai", (req, res) => {
+  const { uai } = req.params;
+  const { max } = req.query;
+
+  // récupérer toutes les formations liées à cet établissement
+  let results = Object.values(db.formations).filter(
+    f => f.etablissement_id == uai
+  );
+
+  if (results.length === 0) {
+    return res.status(404).json({ error: "Aucune formation trouvée pour cet établissement." });
+  }
+
+  // limiter le nombre de résultats
+  if (max && !isNaN(max)) {
+    results = results.slice(0, Number(max));
+  }
+
+  res.json(results);
+});
+
 
 
 const PORT = process.env.PORT || 3000;
