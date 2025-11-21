@@ -42,32 +42,30 @@ app.get("/api/mentions/:inm", (req, res) => {
   res.json(mention);
 });
 
-// ROUTE 4 : disciplines
+// ROUTE 4 : discipline par ID
 app.get("/api/disciplines/:id", (req, res) => {
   const d = db.discipline[req.params.id] || null;
   if (!d) return res.status(404).json({ error: "Discipline introuvable" });
   res.json(d);
 });
 
-// ROUTE 5 : liste complète des établissements
+// ROUTE 5 : liste complète des établissements (on renvoie l'objet tel quel)
 app.get("/api/etablissements", (req, res) => {
-  const list = Object.values(db.etablissements);
-  res.json(list);
+  res.json(db.etablissements); // objet indexé par UAI
 });
 
-// ROUTE 6 : liste complète des disciplines
+// ROUTE 6 : liste complète des disciplines (objet indexé par ID)
 app.get("/api/disciplines", (req, res) => {
-  const list = Object.values(db.discipline);
-  res.json(list);
+  res.json(db.discipline);
 });
 
-// ROUTE 7 : liste complète des mentions
+// ROUTE 7 : liste complète des mentions (objet indexé par INM)
 app.get("/api/mentions", (req, res) => {
-  const list = Object.values(db.mentions);
-  res.json(list);
+  res.json(db.mentions);
 });
 
-
+// ROUTE 8 : formations filtrées par discipline
+// → retour = objet indexé par ID de formation
 app.get("/api/formations", (req, res) => {
   const { discipline, max } = req.query;
 
@@ -77,64 +75,41 @@ app.get("/api/formations", (req, res) => {
       .json({ error: "Vous devez fournir ?discipline=XX en paramètre." });
   }
 
-  // filtrer les formations
   let results = Object.values(db.formations).filter(
     f => f.id_discipline == discipline
   );
 
-  // appliquer la limite si max fourni
   if (max && !isNaN(max)) {
     results = results.slice(0, Number(max));
   }
 
-  res.json(results);
-});
-
-// ROUTE 8 : formations par mention (inm)
-app.get("/api/formations/mention/:inm", (req, res) => {
-  const { inm } = req.params;
-  const { max } = req.query;
-
-  // récupérer toutes les formations ayant la même mention
-  let results = Object.values(db.formations).filter(
-    f => f.mention_id == inm
-  );
-
-  if (results.length === 0) {
-    return res.status(404).json({ error: "Aucune formation trouvée pour cette mention." });
-  }
-
-  // limiter le nombre de résultats si max est fourni
-  if (max && !isNaN(max)) {
-    results = results.slice(0, Number(max));
-  }
-
-  res.json(results);
+  const asObject = Object.fromEntries(results.map(f => [f.id, f]));
+  res.json(asObject);
 });
 
 // ROUTE 9 : formations par établissement (uai)
+// → retour = objet indexé par ID de formation
 app.get("/api/formations/etablissement/:uai", (req, res) => {
   const { uai } = req.params;
   const { max } = req.query;
 
-  // récupérer toutes les formations liées à cet établissement
   let results = Object.values(db.formations).filter(
     f => f.etablissement_id == uai
   );
 
   if (results.length === 0) {
-    return res.status(404).json({ error: "Aucune formation trouvée pour cet établissement." });
+    return res.status(404).json({
+      error: "Aucune formation trouvée pour cet établissement."
+    });
   }
 
-  // limiter le nombre de résultats
   if (max && !isNaN(max)) {
     results = results.slice(0, Number(max));
   }
 
-  res.json(results);
+  const asObject = Object.fromEntries(results.map(f => [f.id, f]));
+  res.json(asObject);
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 
