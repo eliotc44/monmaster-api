@@ -64,27 +64,32 @@ app.get("/api/mentions", (req, res) => {
   res.json(db.mentions);
 });
 
-// ROUTE 8 : formations filtrées par discipline
-// → retour = objet indexé par ID de formation
-app.get("/api/formations", (req, res) => {
-  const { discipline, max } = req.query;
+// ROUTE 8 : formations par mention (inm)
+app.get("/api/formations/mention/:inm", (req, res) => {
+  const { inm } = req.params;
+  const { max } = req.query;
 
-  if (!discipline) {
-    return res
-      .status(400)
-      .json({ error: "Vous devez fournir ?discipline=XX en paramètre." });
-  }
-
-  let results = Object.values(db.formations).filter(
-    f => f.id_discipline == discipline
+  // récupérer toutes les formations ayant la même mention
+  // + qui ont bien une géolocalisation (geo.lat / geo.lon non null)
+  let results = Object.values(db.formations).filter(f =>
+    f.mention_id == inm &&
+    f.geo &&                       // l'objet existe
+    f.geo.lat != null &&
+    f.geo.lon != null
   );
 
+  if (results.length === 0) {
+    return res
+      .status(404)
+      .json({ error: "Aucune formation trouvée pour cette mention avec géolocalisation." });
+  }
+
+  // limiter le nombre de résultats si max est fourni
   if (max && !isNaN(max)) {
     results = results.slice(0, Number(max));
   }
 
-  const asObject = Object.fromEntries(results.map(f => [f.id, f]));
-  res.json(asObject);
+  res.json(results);
 });
 
 // ROUTE 9 : formations par établissement (uai)
