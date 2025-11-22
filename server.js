@@ -69,11 +69,10 @@ app.get("/api/formations/mention/:inm", (req, res) => {
   const { inm } = req.params;
   const { max } = req.query;
 
-  // récupérer toutes les formations ayant la même mention
-  // + qui ont bien une géolocalisation (geo.lat / geo.lon non null)
+  // 1) Filtrer les formations avec cette mention + géoloc présente
   let results = Object.values(db.formations).filter(f =>
     f.mention_id == inm &&
-    f.geo &&                       // l'objet existe
+    f.geo &&
     f.geo.lat != null &&
     f.geo.lon != null
   );
@@ -84,13 +83,21 @@ app.get("/api/formations/mention/:inm", (req, res) => {
       .json({ error: "Aucune formation trouvée pour cette mention avec géolocalisation." });
   }
 
-  // limiter le nombre de résultats si max est fourni
+  // 2) Limiter le nombre de résultats
   if (max && !isNaN(max)) {
     results = results.slice(0, Number(max));
   }
 
-  res.json(results);
+  // 3) Transformer le tableau en objet { idFormation: formation, ... }
+  const obj = results.reduce((acc, f) => {
+    acc[f.id] = f;
+    return acc;
+  }, {});
+
+  // 4) Réponse = objet
+  res.json(obj);
 });
+
 
 // ROUTE 9 : formations par établissement (uai)
 // → retour = objet indexé par ID de formation
